@@ -19,7 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+//✅transactional의 readonly가 true이면 테이블 입력이 불가
+@Transactional
 public class TodoService {
 
     private final TodoRepository todoRepository;
