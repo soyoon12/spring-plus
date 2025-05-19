@@ -17,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 //✅transactional의 readonly가 true이면 테이블 입력이 불가
@@ -48,10 +50,23 @@ public class TodoService {
         );
     }
 
-    public Page<TodoResponse> getTodos(int page, int size) {
+    public Page<TodoResponse> getTodos(int page, int size, String weather, LocalDateTime start, LocalDateTime end) {
         Pageable pageable = PageRequest.of(page - 1, size);
 
-        Page<Todo> todos = todoRepository.findAllByOrderByModifiedAtDesc(pageable);
+        boolean hasWeather = weather != null && !weather.isEmpty();
+        boolean hasPeriod = start != null && end != null;
+
+        Page<Todo> todos;
+
+        if (hasWeather && hasPeriod) {
+            todos = todoRepository.fetchByWeatherAndPeriod(pageable, weather, start, end);
+        } else if (hasWeather) {
+            todos = todoRepository.fetchByWeather(pageable, weather);
+        } else if (hasPeriod) {
+            todos = todoRepository.fetchByPeriod(pageable, start, end);
+        } else {
+            todos = todoRepository.fetchAll(pageable);
+        }
 
         return todos.map(todo -> new TodoResponse(
                 todo.getId(),
